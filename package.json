@@ -1,0 +1,23 @@
+{
+  "name": "tags",
+  "version": "0.0.1",
+  "description": "database driven web app geared towards fetching entries crossreferenced by tags",
+  "main": "server.js",
+  "author": "the codewezl",
+  "license": "MIT",
+  "private": false,
+  "dependencies": {
+    "express": "^4.16.4",
+    "mysql": "^2.16.0",
+    "nodemon": "^1.18.9",
+    "passport": "^0.4.0"
+  },
+  "devDependencies": {
+    "chai": "^4.2.0",
+    "mocha": "^5.2.0",
+    "mochawesome": "^3.1.1"
+  },
+  "scripts": {
+    "test": "mocha --recursive --reporter mochawesome"
+  }
+}
