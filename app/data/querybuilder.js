@@ -58,9 +58,13 @@ QueryBuilder.prototype.columns = function columns(columns) {
 };
 QueryBuilder.prototype.values = function values(values) {
   values = values instanceof Array ? values : [values];
-  const newValues = this.current.values.concat(values);
+  let newValues = this.current.values.concat(values);
   if (this.current.columns.length != newValues.length) 
     throw new RangeError('the length properties of the two arrays do not match.')
+  newValues = newValues.map(v => {
+    if (typeof(v) === 'string') return `"${v}"`;
+    return v;
+  });
   this.current.values = newValues;
   return this;
 };

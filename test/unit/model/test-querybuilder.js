@@ -1,6 +1,6 @@
 module.exports = (function() {
   const {assert, expect} = require('chai'); 
-  const QueryBuilder = require('../../../src/model/querybuilder');
+  const QueryBuilder = require('../../../app/data/querybuilder');
   
   let qb; 
   
@@ -134,7 +134,7 @@ module.exports = (function() {
         const obj = qb.insert('sometable').columns('id').values('myid').current;
         assert.isTrue(obj.values instanceof Array);
         assert.equal(obj.values.length, 1);
-        assert.equal(obj.values[0], 'myid');
+        assert.equal(obj.values[0], '"myid"');
       });
       it ('should update the values list with an array of items', function() {
         const columns = ['one', 'two', 'three'];
