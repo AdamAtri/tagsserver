@@ -9,13 +9,13 @@
   "dependencies": {
     "express": "^4.16.4",
     "mysql": "^2.16.0",
-    "nodemon": "^1.18.9",
     "passport": "^0.4.0"
   },
   "devDependencies": {
     "chai": "^4.2.0",
     "mocha": "^5.2.0",
-    "mochawesome": "^3.1.1"
+    "mochawesome": "^3.1.1",
+    "nodemon": "^1.18.9"
   },
   "scripts": {
     "test": "mocha --recursive --reporter mochawesome"
