@@ -6,6 +6,8 @@ module.exports.HEADERS = {
   }
 };
 
-module.exports.Nugget = {
-  TABLE: 'nugget'
-}
+module.exports.Tables = {
+  NUGGET: 'nugget',
+  TAG: 'tag',
+  NUG_TAG: 'nugget_tag'
+};
