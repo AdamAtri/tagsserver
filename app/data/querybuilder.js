@@ -1,8 +1,8 @@
 //module.exports = 
 function QueryBuilder() {
-  var current;
-  var currentModifier;
-  var queryString;
+  var current; // eslint-disable-line
+  var currentModifier; // eslint-disable-line
+  var queryString; // eslint-disable-line
 }
 
 // SELECT 
@@ -11,7 +11,7 @@ QueryBuilder.prototype.select = function select(columns=['*']) {
   this.current = {
     function: 'select',
     columns
-  }
+  };
   return this;
 };
 
@@ -46,8 +46,9 @@ QueryBuilder.prototype.insert = function insert(intoTable) {
     tableAccess: 'into',
     table: intoTable,
     columns: [], 
-    values: []
-  }
+    values: [],
+    onDuplicate: null
+  };
   return this;
 };
 
@@ -60,13 +61,16 @@ QueryBuilder.prototype.values = function values(values) {
   values = values instanceof Array ? values : [values];
   let newValues = this.current.values.concat(values);
   if (this.current.columns.length != newValues.length) 
-    throw new RangeError('the length properties of the two arrays do not match.')
+    throw new RangeError('the length properties of the two arrays do not match.');
   newValues = newValues.map(v => {
     if (typeof(v) === 'string') return `"${v}"`;
     return v;
   });
   this.current.values = newValues;
   return this;
+};
+QueryBuilder.prototype.onDuplicate = function onDuplicate(handleIt) {
+  this.current.onDuplicate = handleIt;
 };
 
 
@@ -88,11 +92,11 @@ QueryBuilder.prototype.buildQuery = function buildQuery() {
 QueryBuilder.prototype.buildSelect = function buildSelect(currentObj) {
   const {columns, table, distinct, where } = currentObj;
   return `SELECT ${distinct ? "DISTINCT " : ""}${columns.join(', ')} from ${table}${where ? ' where ' + where.join(' and '):''};`;
-}
+};
 
 QueryBuilder.prototype.buildInsert = function buildInsert(currentObj) {
-  const {values,columns, table } = currentObj;
-  return `INSERT INTO ${table} (${columns.join(', ')}) VALUES (${values.join(', ')});`;
-}
+  const {values, columns, table, onDuplicate } = currentObj;
+  return `INSERT INTO ${table} (${columns.join(', ')}) VALUES (${values.join(', ')})${onDuplicate ? ' ON DUPLICATE KEY ' + onDuplicate : ''};`;
+};
 
 module.exports = QueryBuilder;
