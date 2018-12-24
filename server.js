@@ -52,10 +52,10 @@ const publicOptions = {
   dotfiles: 'allow',
   lastModified: true,
   maxAge: '1d',
-  setHeaders: function(res, path, stat) {
+  setHeaders: function(res) {
     res.set({
       'Cache-Control':'private'
-    })
+    });
   }
 };
 app.use(express.static(join(__dirname, 'public'), publicOptions));
