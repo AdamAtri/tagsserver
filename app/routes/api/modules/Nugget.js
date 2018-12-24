@@ -7,6 +7,9 @@ module.exports = function(query) {
   const qb = new QueryBuilder();
 
 
+  /**
+   * Get the entire list or just one
+   */
   nuggetRouter.get('/(:id)?', (req, res) => {
     const id = req.params.id;
     qb.select().from(Tables.NUGGET);
@@ -23,6 +26,9 @@ module.exports = function(query) {
       });
   });
 
+  /** 
+   * 
+   */
   nuggetRouter.post('/', (req, res) => {
     const {title, blurb, tags} = req.body;
     if (! (title && blurb)) {
@@ -35,43 +41,68 @@ module.exports = function(query) {
       qb.insert(Tables.NUGGET).columns(['title', 'blurb']).values([title, blurb]);
       query(qb.buildQuery())
       .then(result => {
-        return nuggetResult = result;
+        //console.log('>> got nugget insert result ', result);
+        nuggetResult = result;
+        return nuggetResult;
       })
       .then(() => {
-        return new Promise(resolve => {
+        //console.log('>> starting tag inserts');
+        return new Promise(m_resolve => {
           if (tags) {
             const tagsArr = tags instanceof Array ? tags : [tags];
-            console.log(tagsArr);
-
-            let id;
             const promises = [];
             tagsArr.forEach(tag => {
-              // sanitize the tag to make an id
-              id = tag.replace(/\s+/g, '-').replace(/[/'*^\\&]/, '').toLowerCase();
-              qb.insert(Tables.TAG).columns(['id', 'text']).values([id, tag]).onDuplicate('UPDATE id=id');
-              promises.push(query(qb.buildQuery())
-                .then(result => {
-                  tagIds.push(result.insertId);
-                })
-                .catch(err => {
-                  console.log(err); 
-                })
-              );
+              promises.push(new Promise((resolve, reject) => {
+                // sanitize the tag to make an id
+                const id = escape(tag.replace(/\s+/g, '-').replace(/[/'*^\\&]/, '').toLowerCase());
+                // first query if the id is present
+                qb.select().from(Tables.TAG).where(`id = "${id}"`);
+                query(qb.buildQuery()).then(getResult => {
+                  if (getResult && getResult.length == 1) {
+                    tagIds.push(id);
+                    resolve();
+                  }
+                  else {
+                    qb.insert(Tables.TAG).columns(['id', 'text']).values([id, tag]).onDuplicate('UPDATE id=id');
+                    query(qb.buildQuery())
+                    .then((/*insertResult*/) => {
+                      //console.log('insertResult', insertResult);
+                      tagIds.push(id);
+                      resolve();
+                    })
+                    .catch(err => {
+                      console.error(err); 
+                      reject();
+                    });
+                  }
+                });
+              }).catch(e => {
+                res.status(500).send('Internal error while inserting nugget: ' + e.message);
+              }));
             });
-            Promise.all(promises).then(resolve);
+            
+            Promise.all(promises).then(() => {
+              //console.log('>> all tag insert promises resolved');
+              m_resolve();
+            });
+          }
+          else {
+            // if there are no tags, we're done
+            m_resolve();
           }
         });
       })
       .then(() => {
+        //console.log('>> insert nugget_tags', nuggetResult.insertId, tagIds);
         if (nuggetResult && tagIds.length > 0) {
           tagIds.forEach(tagId => {
             qb.insert(Tables.NUG_TAG).columns(['nugget_id', 'tag_id'])
-              .values([nuggetResult.insertId, tagId]).onDuplicate('UPDATE id=id');
+              .values([nuggetResult.insertId, tagId]).onDuplicate('UPDATE nugget_id=nugget_id');
             query(qb.buildQuery());
           });
         }
         res.header(HEADERS.CT_JSON);
-        res.json(nuggetResult);
+        res.json({nugget: nuggetResult.insertId, tags: tagIds});
       })
       .catch(err => {
         res.status(400).send({error: err.message});
