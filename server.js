@@ -20,7 +20,7 @@ const server443 = (function() {
     return https.createServer(options, app);
   }
 
-  const debugCerts = resolve(__dirname, '..', 'test-certs')
+  const debugCerts = resolve(__dirname, '..', 'test-certs');
   const options = {
     key: fs.readFileSync(join(debugCerts, 'key.pem')),
     cert: fs.readFileSync(join(debugCerts, 'test-cert.pem'))
@@ -58,7 +58,7 @@ const publicOptions = {
     });
   }
 };
-app.use(express.static(join(__dirname, 'public'), publicOptions));
+app.use(express.static(join(__dirname, 'client', 'dist', 'client'), publicOptions));
 
 // setup logging
 app.use(require('morgan')('combined'));
@@ -102,6 +102,69 @@ app.use('/api', APIRouter());
 //   smsParam.phone(req.body.phone);
 //   sendTxt(smsParam).then(data => {console.log(data); res.end(); }).catch(console.error);
 // });
+
+
+const heroes = [
+  { id: 11, name: 'Mr. Nice' },
+  { id: 12, name: 'Narco' },
+  { id: 13, name: 'Bombasto' },
+  { id: 14, name: 'Celeritas' },
+  { id: 15, name: 'Magneta' },
+  { id: 16, name: 'RubberMan' },
+  { id: 17, name: 'Dynama' },
+  { id: 18, name: 'Dr IQ' },
+  { id: 19, name: 'Magma' },
+  { id: 20, name: 'Tornado' }
+];
+app.get('/heroes(/:id)?', (req, res) => {
+  let result = heroes;
+  if (req.params.id) {
+    const pHero = heroes.filter(h => h.id === +req.params.id);
+    if (pHero.length > 0) 
+      result = pHero[0];
+  }
+  else if (req.params) {
+    console.log(req.params);
+  } 
+  res.json(result);
+});
+
+app.put('/heroes', (req, res) => {
+  const inHero = req.body;
+  if (! (inHero && inHero.id) ) res.status(400).json({error: 'must provide body'});
+  let result = {};
+  for (let i in heroes) {
+    if (heroes[i].id === +inHero.id) {
+      heroes[i] = Object.assign({}, heroes[i], inHero);
+      result = heroes[i];
+      break;
+    }
+  }
+  res.json(result);
+});
+
+app.post('/heroes', (req, res) => {
+  const inHero = req.body;
+  if (! (inHero && inHero.name)) res.status(400).json({error: 'must provide body for post'});
+  if (inHero.id) res.status(400).json({error: 'to update a model use PUT'});
+  const id = heroes.length + 11;
+  const newHero = Object.assign({}, inHero, {id});
+  heroes.push(newHero);
+  res.json(newHero);
+});
+
+app.delete('/heroes/:id', (req, res) => {
+  const idToDelete = req.params.id;
+  if (idToDelete) {
+    const toDelete = heroes.find(h => h.id === +idToDelete);
+    heroes.splice(heroes.indexOf(toDelete), 1);
+  }
+  res.json(heroes);
+});
+
+app.get('*', (req, res) => {
+  res.status(300).sendFile(join(__dirname, 'client', 'dist', 'client', 'index.html'));
+});
 
 
 server80.listen(16080, () => {console.log('Tags Server listening on 16080');});
